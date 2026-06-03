@@ -185,7 +185,7 @@ contract LPMiningRewards {
     /**
      * @notice 提取 ANUB 代币奖励
      */
-    function claimReward() external updateRewards(msg.sender) returns (uint256 reward) {
+    function claimReward() public updateRewards(msg.sender) returns (uint256 reward) {
         StakeInfo storage s = stakes[msg.sender];
         reward = _pendingReward(msg.sender);
         require(reward > 0, "No reward");
@@ -199,7 +199,7 @@ contract LPMiningRewards {
     /**
      * @notice 提取手续费分红
      */
-    function claimFee() external updateRewards(msg.sender) returns (uint256 fee) {
+    function claimFee() public updateRewards(msg.sender) returns (uint256 fee) {
         StakeInfo storage s = stakes[msg.sender];
         fee = pendingFee(msg.sender);
         require(fee > 0, "No fee");

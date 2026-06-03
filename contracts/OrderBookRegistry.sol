@@ -183,7 +183,7 @@ contract OrderBookRegistry {
     function _extractViewTag() internal pure returns (bytes4) {
         bytes4 tag;
         assembly {
-            tag := bytes4(calldataload(32))
+            tag := shr(224, calldataload(32))
         }
         return tag;
     }
