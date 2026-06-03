@@ -139,9 +139,11 @@ describe("LeverageManager", function () {
     const { leverage, alice } = await loadFixture(deployFixture);
     const size = ethers.parseEther("1");    // 1 ETH
     const price = ethers.parseEther("3000");
+    const leverageRatio = 5n;
+    const margin = (price * size) / (leverageRatio * 10n ** 18n);
 
-    await leverage.connect(alice).openPosition("ETH_USDT", true, size, 5, {
-      value: price * size / 5n,
+    await leverage.connect(alice).openPosition("ETH_USDT", true, size, Number(leverageRatio), {
+      value: margin,
     });
 
     const pos = await leverage.getPosition(alice.address, "ETH_USDT");

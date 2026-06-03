@@ -80,6 +80,7 @@ contract LeverageManager {
     uint256 public liquidatorRewardBps  = 125;   // 1.25%
     uint8   public constant MAX_LEVERAGE = 10;
     uint256 public constant BPS_DENOMINATOR = 10000;
+    uint256 public constant PRECISION = 1e18;
 
     // 持仓（account → symbol → Position）
     mapping(address => mapping(string => Position)) public positions;
@@ -148,8 +149,8 @@ contract LeverageManager {
         uint256 entryPrice = oraclePrices[symbol];
         require(entryPrice > 0, "No oracle price");
 
-        // 计算所需保证金 = price * size / leverage
-        uint256 requiredMargin = entryPrice * size / uint256(leverage);
+        // 计算所需保证金 = price * size / 1e18 / leverage
+        uint256 requiredMargin = entryPrice * size / PRECISION / uint256(leverage);
         require(msg.value >= requiredMargin, "Insufficient margin");
 
         // 退还多余保证金
@@ -218,7 +219,7 @@ contract LeverageManager {
         require(_isLiquidatable(pos, currentPrice), "Not liquidatable");
 
         uint256 loss = _calcLiquidationLoss(pos, currentPrice);
-        uint256 penalty = pos.size * currentPrice * liquidationPenaltyBps / BPS_DENOMINATOR;
+        uint256 penalty = pos.size * currentPrice * liquidationPenaltyBps / BPS_DENOMINATOR / PRECISION;
         uint256 reward = penalty * liquidatorRewardBps / BPS_DENOMINATOR;
 
         // 清算人获得罚金中的奖励部分
@@ -250,18 +251,18 @@ contract LeverageManager {
      */
     function _calcPnL(Position storage pos, uint256 currentPrice) internal view returns (int256) {
         if (pos.isLong) {
-            // long: PnL = (currentPrice - entryPrice) * size
+            // long: PnL = (currentPrice - entryPrice) * size / 1e18
             if (currentPrice >= pos.entryPrice) {
-                return int256((currentPrice - pos.entryPrice) * pos.size);
+                return int256((currentPrice - pos.entryPrice) * pos.size / PRECISION);
             } else {
-                return -int256((pos.entryPrice - currentPrice) * pos.size);
+                return -int256((pos.entryPrice - currentPrice) * pos.size / PRECISION);
             }
         } else {
-            // short: PnL = (entryPrice - currentPrice) * size
+            // short: PnL = (entryPrice - currentPrice) * size / 1e18
             if (pos.entryPrice >= currentPrice) {
-                return int256((pos.entryPrice - currentPrice) * pos.size);
+                return int256((pos.entryPrice - currentPrice) * pos.size / PRECISION);
             } else {
-                return -int256((currentPrice - pos.entryPrice) * pos.size);
+                return -int256((currentPrice - pos.entryPrice) * pos.size / PRECISION);
             }
         }
     }
@@ -293,7 +294,7 @@ contract LeverageManager {
 
         // 强平罚金从返还中扣除
         if (isLiquidation && returnAmount > 0) {
-            uint256 penalty = pos.size * currentPrice * liquidationPenaltyBps / BPS_DENOMINATOR;
+            uint256 penalty = pos.size * currentPrice * liquidationPenaltyBps / BPS_DENOMINATOR / PRECISION;
             if (returnAmount > penalty) {
                 returnAmount -= penalty;
             } else {
@@ -316,7 +317,7 @@ contract LeverageManager {
         if (pnl >= 0) return false; // 盈利不平仓
 
         uint256 loss = uint256(-pnl);
-        uint256 positionValue = pos.size * currentPrice;
+        uint256 positionValue = pos.size * currentPrice / PRECISION;
         uint256 maintenanceMargin = positionValue * maintenanceMarginBps / BPS_DENOMINATOR;
 
         // 亏损 + 维持保证金 > 当前保证金 → 强平
