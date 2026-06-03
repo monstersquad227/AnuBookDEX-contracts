@@ -1,0 +1,19 @@
+{
+  "name": "anubookdex-contracts",
+  "version": "1.0.0",
+  "description": "AnuBookDEX Solidity contracts — Anubis Chain (EVM)",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network anubisTestnet",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network anubisMainnet",
+    "export-abi": "hardhat run scripts/export-abi.ts",
+    "size": "hardhat size-contracts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0",
+    "hardhat-contract-sizer": "^2.10.0",
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}
