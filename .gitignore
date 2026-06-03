@@ -6,3 +6,5 @@ dist/
 .env
 coverage/
 coverage.json
+
+prompt/
